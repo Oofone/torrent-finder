@@ -61,7 +61,7 @@ Long Parameters:
     <code>
     python loader.py --search Ubuntu --firstlink 0 
     </code>
-</pre>(
+</pre>
 
 The downloaded '.torrent' file is **automatically launched** via the default application for '.torrent' files. 
 Please select a default application beforehand for smoother execution in the following way:
