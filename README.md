@@ -63,4 +63,12 @@ Long Parameters:
     </code>
 </pre>(
 
+The downloaded '.torrent' file is **automatically launched** via the default application for '.torrent' files. 
+Please select a default application beforehand for smoother execution in the following way:
+- Right clicking a torrent file.
+- Clicking on "Open With".
+- Choosing your preferred BitTorrent Client.
+- And finally selecting "Set as default".
+
+
 ####Note: The torrent files are received from a 3rd party. [Torrent Project](https://torrentproject.se) is being used by the crawler/scraper as the files are arranged according to relevance.
