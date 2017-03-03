@@ -10,7 +10,8 @@ The search-string can be directly supplied as a **command-line arguement** from 
 Dependancies
 ============
 
-- [cfscrape](https://github.com/Anorov/cloudflare-scrape) NOTE: cfscrape in itself requires the following dependancies:
+- Python 2.7 or greater.
+- [cfscrape](https://github.com/Anorov/cloudflare-scrape) **NOTE**: cfscrape in itself requires the following dependancies:
 -- [Js2Py](https://github.com/PiotrDabkowski/Js2Py)
 -- [Requests](https://github.com/kennethreitz/requests)
 -- Cloning the **cfscrape module** and running the following command will automatically install all dependancies.
@@ -22,7 +23,7 @@ Dependancies
 </pre>
     
 - The beautifier Module provided in this package: It is a pretty printer for Nested Dictionaries and lists
-- **[BeautifulSoup]**(https://www.crummy.com/software/BeautifulSoup/): A module that parser HTML and XML in Python.
+- **[BeautifulSoup](https://www.crummy.com/software/BeautifulSoup)**: A module that parser HTML and XML in Python.
 
 
 Usage
