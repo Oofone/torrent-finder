@@ -6,20 +6,16 @@ import sys, os, getopt
 import re
 import beautifier as bf
 
-#Uses the cfscrape module to aquire valid cloudflare credentials to access the target website.
 class cookiestuff:
     def __init__(self):
         print "Connecting...\n"
         self.cookie_arg, self.user_agent = cfscrape.get_cookie_string("https://torrentproject.se")
 
-#This object now contains the credentials as two data members.
 ck = cookiestuff()
 
-#Returns the URL of the search field with the encoded search_string.
 def getURL(st):
     return "https://torrentproject.se/?" + urllib.urlencode({'t': st})
 
-#If command-line arguments are not provided. This function will prompt the user for induvidual arguments.
 def getIns():
     s = raw_input('Enter the search string: ')
 
@@ -33,34 +29,36 @@ def getIns():
 
     return s, f
 
-#Creates the initial request to the page with the requered HTTP Headers.
 def createReq(url):
 
-    hdr = {
-      'accept':'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-      'accept-encoding':'none',
-      'accept-language':'en-GB,en-US;q=0.8,en;q=0.6',
-      'cookie':ck.cookie_arg,
-      'user-agent':ck.user_agent}
+    if(url.split('/')[2] == "torrentproject.se"):
+        hdr = {
+                'accept':'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+                'accept-encoding':'none',
+                'accept-language':'en-GB,en-US;q=0.8,en;q=0.6',
+                'cookie':ck.cookie_arg,
+                'user-agent':ck.user_agent}
+    else:
+        hdr = {
+                'accept':'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+                'accept-encoding':'none',
+                'accept-language':'en-GB,en-US;q=0.8,en;q=0.6',
+                'user-agent':ck.user_agent}
 
     req = urllib2.Request(url, headers = hdr)
     return req
 
-#This function is used to finally download the .torrent file itself.
 def download(link, url, d):
+    durl = url
     url = url.split('?')[0]
     url += link.get('href')[1:]
-    #print url
+#print url
     req = createReq(url)
     x = urllib2.urlopen(req)
 
     try: os.mkdir('Torrents')
     except OSError: os.chdir('Torrents')
 
-    #Here BeautifulSoup is used to navigate throught the HTML and find the necessary links.
-    #           Anchor tags or <a> ... </a> tags are found in other parts of the program
-    #           Here we make use of the <span> tag that contains the <a> tag itseld.
-     
     soup = bs4.BeautifulSoup(x.read(), 'html.parser')
     tags = soup('span')
 
@@ -72,9 +70,16 @@ def download(link, url, d):
     lastu = tag.parent.contents[3].get('href')
     lastu = 'https:' + lastu
     req = createReq(lastu)
-    x = urllib2.urlopen(req)
+    print lastu, req
 
-    #Here we rename the file such that it somewhat makes sense.
+    try:
+        x = urllib2.urlopen(req)
+    except urllib2.URLError:
+        print "Sorry, but I'm afraid the site hosting this torrent is down at the moment.. Maybe later bruv"
+        sleep(1)
+        htmlOperate(createReq(durl),durl, 0, 0)
+
+
     nameproper = d['Name'].split()
     nameproper = nameproper[0] + nameproper[1] + u'.torrent'
 
@@ -88,12 +93,9 @@ def download(link, url, d):
 
     print "Launching Torrent Client...\n"
     sleep(1)
-    #Launches the default torrent client: Usually 'Transmission' client.
     os.system('gnome-open ' + nameproper)
     print "Done\n"
 
-#Pretty self-explanatory: Prints the details of the current chosen torrent files
-#Makes use of re or the Regular Expression library
 def printDetails(lnk):
     print '==============DETAILS================\n\n'
     link = lnk.text
@@ -115,14 +117,10 @@ def printDetails(lnk):
     d['Size'] = par[3].text.strip()
     bf.printer(d)
     print '\n\n====================================='
-    
-    #Dictionary contains all the details of the torrent file.
+
     return d
 
-#Core functionality.
-#Traverses through the searched torrents and selects a target torrent based on the -f argument.
-#It will move to the next torrent if the current one is found unappealing.
-def htmlOperate(req, url, f=0, tr = 0):
+def htmlOperate(req, url, f=0, tr = 0, done = []):
     x = urllib2.urlopen(req)
     soup = bs4.BeautifulSoup(x.read(), 'html.parser')
 
@@ -135,6 +133,7 @@ def htmlOperate(req, url, f=0, tr = 0):
         print
         for i in results:
             count += 1
+            if count in done: continue
             print str(count) + ' ' + i.text
         print
         print 'Select a Torrent:\nEnter 0 to Quit\n'
@@ -147,6 +146,7 @@ def htmlOperate(req, url, f=0, tr = 0):
                 sys.exit(2)
         if choice == 0: sys.exit(0)
         link = results[choice-1]
+        done.append(choice)
 
 
     d = printDetails(link)
@@ -163,12 +163,12 @@ def htmlOperate(req, url, f=0, tr = 0):
 
             os.system('clear')
             print('Refreshing')
-            htmlOperate(req, url, f, tr + 1)
+            htmlOperate(req, url, f, tr + 1, done)
             return
         else:
             print 'Huh?'
 
-#Finds and puts together the arguments or prompts the user for manual input.
+
 def runner(par, opts = None):
     search_string = ''
     first_link = 0
@@ -185,8 +185,6 @@ def runner(par, opts = None):
                 else:
                     print 'Note:\nCorrect usage is: python loader.py -s <search_string> -f <1_or_0>'
                     sys.exit(2)
-        if search_string == '':
-            search_string = raw_input('Enter the search string: ')
     else:
         search_string, first_link = getIns()
 
@@ -194,10 +192,6 @@ def runner(par, opts = None):
     req = createReq(url)
     htmlOperate(req, url, first_link)
 
-    
-#The starting point of the program.
-#Passes the required command-line args.
-#Intermediate function used to parse the command-line arguments using the built-in getopt function.
 def main(argv):
     if argv:
         try:
